@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta charset=utf-8>
+        <meta name=viewport content="width=device-width, initial-scale=1.0">
+        <meta http-equiv=Content-Type content="text/html; charset=UTF-8">
+        <title>popup</title>
+
+        <!-- JQuery-->
+        <script type="text/javascript" src="assets/js/jquery-1.8.3.min.js"></script>
+
+        <!-- layui -->
+        <script src="assets/layui/layui.all.js"></script>
+        <link rel="stylesheet" href="assets/layui/css/layui.css">
+
+        <!--bootstrap-->
+        <script src="assets/js/bootstrap.min.js"></script>
+        <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+        <link rel="stylesheet" href="assets/css/normalize.css">
+
+        <!-- popup -->
+        <script src="../js/common.js"></script>
+        <script src="../js/moment.js"></script>
+        <script type=text/javascript src=assets/js/popup.js></script>
+        <style type=text/css>
+            body {
+                width: 310px;
+                height: 300px;
+            }
+
+            #optionsForm .layui-form-label {
+                width: 200px;
+            }
+
+            .layui-form-switch {
+                margin-left: 20px;
+                width: 60px;
+            }
+
+            .layui-form-label {
+                text-align: left;
+                color: #0e90d2;
+                font-size: 16px;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="alert alert-success" style="text-align: center;font-size: 24px;"
+             role="alert">
+            BOC Tools
+            <div id="unLoginDiv" style="position:absolute;right: 0px;top: 0px;color: red;font-size: 10px">当前未登录，点击
+                <button class="btn btn-primary" style="height: 20px;line-height: 8px;font-size: 8px" data-toggle="modal"
+                        data-target="#exampleModal">登录
+                </button>
+            </div>
+            <div id="loginDiv" style="position:absolute;right: 0px;top: 0px;color: green;font-size: 10px">欢迎：<span
+                    id="userName"></span>
+            </div>
+        </div>
+        <!-- 设置表单 -->
+        <form class="layui-form" id="optionsForm">
+            <div class="layui-form-item">
+                <label class="layui-form-label">自动获取</label>
+                <div class="layui-input-block">
+                    <input type="checkbox" id="autoClickSearch" lay-filter="autoClickSearchClick" lay-skin="switch">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">页面刷新后自动获取</label>
+                <div class="layui-input-block">
+                    <input type="checkbox" id="autoGetList" lay-filter="autoGetListClick" lay-skin="switch">
+                </div>
+            </div>
+
+        </form>
+
+        <form>
+            <button style="margin-left: 0px;margin-bottom: 10px"
+                    type="button" class="btn btn-primary" id="btnGetCurrentPage">获取当前页面
+            </button>
+            <!--<h4><span class="label label-primary" id="lbOrderCount">Info</span></h4>-->
+        </form>
+        <div style="margin-left: 20px;">最新发布时间：<span class="layui-badge layui-bg-green"
+                                                       id="latestReleaseTime">22222</span>
+            <br>下次刷新时间：<span class="layui-badge layui-bg-green"
+                         id="latestRefreshTime">22222</span>
+        </div>
+
+        <!-- 弹出的登陆对话框 -->
+        <div style="display: none" class="modal fade" id="exampleModal" tabindex="-1" role="dialog"
+             aria-labelledby="exampleModalLabel">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="exampleModalLabel">登陆</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form>
+                            <div class="form-group">
+                                <label for="txtWorkId" class="control-label">工号:</label>
+                                <input type="text" class="form-control" id="txtWorkId">
+                            </div>
+                            <div class="form-group">
+                                <label for="txtPassword" class="control-label">密码:</label>
+                                <input type="password" class="form-control" id="txtPassword"></input>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" id="hideLoginForm" data-dismiss="modal">Close
+                        </button>
+                        <button type="button" id="btnLogin" class="btn btn-primary">登陆</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
