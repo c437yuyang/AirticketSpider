@@ -4,7 +4,7 @@ chrome.runtime.onInstalled.addListener(function () {
         chrome.declarativeContent.onPageChanged.addRules([
             {
                 conditions: [
-                    new chrome.declarativeContent.PageStateMatcher({pageUrl: {urlContains: 'http://srh.bankofchina.com'}})
+                    new chrome.declarativeContent.PageStateMatcher({pageUrl: {urlContains: 'https://flights.ctrip.com/international/search'}})
                 ],
                 actions: [new chrome.declarativeContent.ShowPageAction()]
             }
@@ -17,7 +17,8 @@ chrome.storage.local.remove('loginUser', _ => {
 });
 
 // 开启时钟 每隔一定时间向content-script发送刷新消息
-let interval = randomNum(8 * 1000 * 60, 10 * 1000 * 60);
+// let interval = randomNum(8 * 1000 * 60, 10 * 1000 * 60);
+let interval = randomNum(8 * 1000, 10 * 1000);
 // let interval = randomNum(10, 20) * 1000;
 let next_refresh = new Date().getTime() + interval;
 let activeTabId = -1;
@@ -35,7 +36,7 @@ function get_next_refresh() { //这里必须要这样返回，不然popup里面�
 function timerEvent() {
     sendMessageToContentScript({'cmd': 'timerEvent'}, _ => {
     });
-    let interval = randomNum(8 * 1000 * 60, 10 * 1000 * 60);
+    let interval = randomNum(8 * 1000, 10 * 1000);
     // let interval = randomNum(10, 20) * 1000;
     next_refresh = new Date().getTime() + interval;
     console.log(interval);
@@ -62,6 +63,9 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     }
     else if (request.cmd === 'CloseTab') {
         closeTabs(request.data)
+    }
+    else if (request.cmd === 'OpenUrlInCurTab') {
+        openUrlCurrentTab(request.data)
     }
 
     sendResponse('我是后台，我已收到你的消息：' + JSON.stringify(request));
