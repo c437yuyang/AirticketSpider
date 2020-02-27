@@ -59,30 +59,30 @@ function updateState() {
 
 
 $(function () {
-    // $('#enabled')
-    updateState();
+    // // $('#enabled')
+    // updateState();
 
-    // 刷新后自动获取列表开关
-    form.on('switch(autoGetListClick)', function (data) {
-        let checked = data.elem.checked;
-        chrome.storage.local.set({'autoGetList': checked}, _ => {
-        });
-    })
+    // // 刷新后自动获取列表开关
+    // form.on('switch(autoGetListClick)', function (data) {
+    //     let checked = data.elem.checked;
+    //     chrome.storage.local.set({'autoGetList': checked}, _ => {
+    //     });
+    // })
 
-    //  自动点击查询开关
-    form.on('switch(autoClickSearchClick)', function (data) {
-        let checked = data.elem.checked;
-        if (checked === true) {
-            console.log("aa")
-            getCurrentTabId(tabId => {
-                console.log(tabId)
-                bg.setActiveTabId(tabId);
-                console.log(bg.activeTabId)
-            })
-        }
-        chrome.storage.local.set({'autoClickSearch': checked}, _ => {
-        });
-    })
+    // //  自动点击查询开关
+    // form.on('switch(autoClickSearchClick)', function (data) {
+    //     let checked = data.elem.checked;
+    //     if (checked === true) {
+    //         console.log("aa")
+    //         getCurrentTabId(tabId => {
+    //             console.log(tabId)
+    //             bg.setActiveTabId(tabId);
+    //             console.log(bg.activeTabId)
+    //         })
+    //     }
+    //     chrome.storage.local.set({'autoClickSearch': checked}, _ => {
+    //     });
+    // })
 
     // 跳转到汇率页面
     // $('#btnGotoPage').click(() => {
@@ -92,8 +92,22 @@ $(function () {
     // });
 
     // 获取当前页面
-    $('#btnGetCurrentPage').click(() => {
-        sendMessageToContentScript({'cmd': 'getCurrentPage'});
+    $('#startSpider').click(() => {
+        getCurrentTabId((tabId) => {
+            console.log(bg.spiderInsts);
+            if (!bg.spiderInsts[tabId]) {
+                start();
+            } else {
+                let isRunning = bg.spiderInsts[tabId].isRunning;
+                console.log(isRunning)
+                if (isRunning === true) {
+                    stop();
+                } else {
+                    start();
+                }
+            }
+            
+        });
     });
 
     //登陆按钮
@@ -125,6 +139,27 @@ $(function () {
 
     form.render();
 });
+
+function start() {
+    let dept = 'sha';
+    let dest = 'tyo';
+    let deptDate = '2020-03-29'
+
+    // invoke spider
+    bg.startSpider(dept, dest, deptDate);
+
+}
+
+function stop() {
+    let dept = 'sha';
+    let dest = 'tyo';
+    let deptDate = '2020-03-29'
+
+    // invoke spider
+    bg.stopSpider();
+
+}
+
 
 
 

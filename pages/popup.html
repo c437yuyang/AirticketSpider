@@ -61,7 +61,7 @@
         </div>
         <!-- 设置表单 -->
         <form class="layui-form" id="optionsForm">
-            <div class="layui-form-item">
+            <!-- <div class="layui-form-item">
                 <label class="layui-form-label">自动获取</label>
                 <div class="layui-input-block">
                     <input type="checkbox" id="autoClickSearch" lay-filter="autoClickSearchClick" lay-skin="switch">
@@ -72,16 +72,36 @@
                 <div class="layui-input-block">
                     <input type="checkbox" id="autoGetList" lay-filter="autoGetListClick" lay-skin="switch">
                 </div>
+            </div> -->
+            <div class="layui-form-item">
+                <div class="layui-row">
+                    <div class="layui-col-xs5">
+                        <label class="layui-form-label">出发城市：</label>
+                    </div>
+                    <div class="layui-col-xs6">
+                        <input type="text" name="city_departure" placeholder="请输入出发城市" autocomplete="off" class="layui-input">
+                    </div>
+                  </div>
             </div>
-
+            <div class="layui-form-item">
+                <div class="layui-row">
+                    <div class="layui-col-xs5">
+                        <label class="layui-form-label">到达城市：</label>
+                    </div>
+                    <div class="layui-col-xs6">
+                        <input type="text" name="city_arrival" placeholder="请输入到达城市" autocomplete="off" class="layui-input">
+                    </div>
+                  </div>
+            </div>
         </form>
 
-        <form>
-            <button style="margin-left: 0px;margin-bottom: 10px"
-                    type="button" class="btn btn-primary" id="btnGetCurrentPage">获取当前页面
-            </button>
-            <!--<h4><span class="label label-primary" id="lbOrderCount">Info</span></h4>-->
-        </form>
+        
+            <div class="layui-row">
+                <div class="layui-col-md4 layui-col-md-offset4">
+                    <button id="startSpider" type="button" class="layui-btn layui-btn-sm layui-btn-radius">开始获取</button>
+                </div>
+            </div>
+        
         <div style="margin-left: 20px;">最新发布时间：<span class="layui-badge layui-bg-green"
                                                        id="latestReleaseTime">22222</span>
             <br>下次刷新时间：<span class="layui-badge layui-bg-green"

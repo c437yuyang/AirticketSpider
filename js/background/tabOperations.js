@@ -7,6 +7,17 @@ function openUrlNewTab(data) {
     });
 }
 
+// 当前标签打开某个链接
+function openUrlCurrentTab(url, callback) {
+    getCurrentTabId(tabId => {
+        chrome.tabs.update(tabId, { url: url }, function(tab) {
+            if(callback) {
+                callback(tab.id);
+            }
+        });
+    })
+}
+
 // 关闭指定tab
 function closeTabs(tabId) {
     chrome.tabs.remove(tabId);
@@ -30,11 +41,4 @@ function getCurrentTabId(callback) {
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
         if (callback) callback(tabs.length ? tabs[0].id : null);
     });
-}
-
-// 当前标签打开某个链接
-function openUrlCurrentTab(url) {
-    getCurrentTabId(tabId => {
-        chrome.tabs.update(tabId, { url: url });
-    })
 }

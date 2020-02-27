@@ -13,34 +13,43 @@ chrome.runtime.onInstalled.addListener(function () {
 });
 
 let loginUser = undefined;
+var spiderInsts = {'a':'aa'};
+
 chrome.storage.local.remove('loginUser', _ => {
 });
 
-// 开启时钟 每隔一定时间向content-script发送刷新消息
-// let interval = randomNum(8 * 1000 * 60, 10 * 1000 * 60);
-let interval = randomNum(8 * 1000, 10 * 1000);
-// let interval = randomNum(10, 20) * 1000;
-let next_refresh = new Date().getTime() + interval;
-let activeTabId = -1;
-console.log(interval);
-setTimeout(timerEvent, interval);
+function startSpider(dept, dest, deptDate) {
+    // open a new tab
+    // let url = `https://flights.ctrip.com/international/search/oneway-${dept}-${dest}?depdate=${deptDate}&cabin=y_s&adult=1&child=0&infant=0`;
+    let url = `http://www.baidu.com`;
+    openUrlCurrentTab(url, (tabId) => {
+        console.log(`${tabId} start`);
+        spiderInsts[tabId] = {}
+        spiderInsts[tabId].isRunning = true;
+        spiderInsts[tabId].dept = dept;
+        spiderInsts[tabId].dest = dest;
+        spiderInsts[tabId].deptDate = deptDate;
+    });
+}
+
+function stopSpider() {
+    getCurrentTabId((tabId) => {
+        console.log(`${tabId} stop`);
+        spiderInsts[tabId].isRunning = false;
+        spiderInsts[tabId].dept = '';
+        spiderInsts[tabId].dest = '';
+        spiderInsts[tabId].deptDate = '';
+    });
+}
+
+setInterval(timerEvent, 10000);
 
 function setActiveTabId(id) { //必须要这样设置，不然popup.js直接bg.activeTabId = id 不生效不知道为什么
     activeTabId = id;
 }
 
-function get_next_refresh() { //这里必须要这样返回，不然popup里面直接获取next_refresh,每次都重新执行new Date().getTime()+interval,会得到不一样的值
-    return next_refresh;
-}
-
 function timerEvent() {
-    sendMessageToContentScript({'cmd': 'timerEvent'}, _ => {
-    });
-    let interval = randomNum(8 * 1000, 10 * 1000);
-    // let interval = randomNum(10, 20) * 1000;
-    next_refresh = new Date().getTime() + interval;
-    console.log(interval);
-    setTimeout(timerEvent, interval);
+    queryNextTick();
 }
 
 //向contentScript发送消息
@@ -71,4 +80,27 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     sendResponse('我是后台，我已收到你的消息：' + JSON.stringify(request));
 });
 
-
+function queryNextTick() {
+    for (let tabId in spiderInsts) {
+        let spider = spiderInsts[tabId];
+        if (!spider)
+            continue;
+        if (spider.isRunning === true) {
+            let dest = spider.dest;
+            let dept = spider.dept;
+            let deptDate = spider.deptDate;
+            $.ajax({
+                type: 'post',
+                url: `${API_BASE}/spider/queryNextTick`,
+                contentType: 'application/x-www-form-urlencoded;charset=utf-8',
+                data: { dest: dest, dept: dept, deptDate: deptDate },
+                success: nextTick => {
+                    if (new Date().getTime() >= nextTick) {
+                        // reloadTab(tabId);
+                        console.log(`${tabId} reloading`);
+                    }
+                },
+            });
+        }
+    }
+}
