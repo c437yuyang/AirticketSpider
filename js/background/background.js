@@ -62,12 +62,12 @@ function stopSpider() {
     })
 }
 
+queryConfig(); //立即触发一次  加载配置
 setInterval(timerEvent, 10000);
-
 
 function timerEvent() {
     queryNextTick();
-    queryConfig();
+    
 }
 
 //向contentScript发送消息
