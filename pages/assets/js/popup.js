@@ -1,10 +1,10 @@
 //判断是否登陆
 var bg = chrome.extension.getBackgroundPage();
-var layer = layui.layer, form = layui.form;
+var layer = layui.layer, form = layui.form, laydate = layui.laydate;
 
 // 获取当前选项卡ID
 function getCurrentTabId(callback) {
-    chrome.tabs.query({active: true, currentWindow: true}, function (tabs) {
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
         if (callback) callback(tabs.length ? tabs[0].id : null);
     });
 }
@@ -12,7 +12,7 @@ function getCurrentTabId(callback) {
 // 这2个获取当前选项卡id的方法大部分时候效果都一致，只有少部分时候会不一样
 function getCurrentTabId2() {
     chrome.windows.getCurrent(function (currentWindow) {
-        chrome.tabs.query({active: true, windowId: currentWindow.id}, function (tabs) {
+        chrome.tabs.query({ active: true, windowId: currentWindow.id }, function (tabs) {
             if (callback) callback(tabs.length ? tabs[0].id : null);
         });
     });
@@ -28,85 +28,62 @@ function sendMessageToContentScript(message, callback) {
     });
 }
 
-function updateState() {
-    chrome.storage.local.get('autoGetList', function (res) {
-        document.getElementById("autoGetList").checked = res['autoGetList'];
-        form.render('checkbox')
-    });
-    chrome.storage.local.get('autoClickSearch', function (res) {
-        document.getElementById("autoClickSearch").checked = res['autoClickSearch'];
-        form.render('checkbox')
-    });
-
-    $.get(`${API_BASE}/yenExRate/maxReleaseTime`, resp => {
-        $('#latestReleaseTime').text(moment(resp).format('YYYY/MM/DD HH:mm:ss'));
-    });
-
-    $('#latestRefreshTime').text(moment(bg.get_next_refresh()).format('YYYY/MM/DD HH:mm:ss'));
-
-    //判断是否登陆
-    if (bg.loginUser === undefined) {
-        $('#unLoginDiv').show();
-        $('#loginDiv').hide();
-        chrome.storage.local.remove('loginUser', _ => {
-        });
+function updateState(isRunning) {
+    if (isRunning === true) {
+        $('#dest').attr('disabled', true);
+        $('#dept').attr('disabled', true);
+        $('#deptDate').attr('disabled', true);
+        $('#startSpider').text('停止获取');
+        $('#startSpider').addClass('layui-btn-danger');
+        getCurrentTabId((tabId) => {
+            if (!_.isNil(bg.spiderInsts[tabId])) {
+                $('#nextTickTime').text(moment(bg.spiderInsts[tabId].nextTick).format('YYYY/MM/DD HH:mm:ss'));
+                $('#dept').val(bg.spiderInsts[tabId].dept);
+                $('#dest').val(bg.spiderInsts[tabId].dest);
+                $('#deptDate').val(bg.spiderInsts[tabId].deptDate);
+            }
+        })
     } else {
-        $('#unLoginDiv').hide();
-        $('#loginDiv').show();
-        $('#userName').text(bg.loginUser.userName);
+        $('#dest').attr('disabled', false);
+        $('#dept').attr('disabled', false);
+        $('#deptDate').attr('disabled', false);
+        $('#startSpider').text('开始获取');
+        $('#startSpider').removeClass('layui-btn-danger');
     }
+
 }
 
-
 $(function () {
-    // // $('#enabled')
-    // updateState();
+    getCurrentTabId((tabId) => {
+        if (!bg.spiderInsts[tabId] || !bg.spiderInsts[tabId].isRunning) {
+            console.log('a');
+            updateState(false);
+        } else {
+            console.log('b');
+            updateState(true);
+        }
+    });
 
-    // // 刷新后自动获取列表开关
-    // form.on('switch(autoGetListClick)', function (data) {
-    //     let checked = data.elem.checked;
-    //     chrome.storage.local.set({'autoGetList': checked}, _ => {
-    //     });
-    // })
-
-    // //  自动点击查询开关
-    // form.on('switch(autoClickSearchClick)', function (data) {
-    //     let checked = data.elem.checked;
-    //     if (checked === true) {
-    //         console.log("aa")
-    //         getCurrentTabId(tabId => {
-    //             console.log(tabId)
-    //             bg.setActiveTabId(tabId);
-    //             console.log(bg.activeTabId)
-    //         })
-    //     }
-    //     chrome.storage.local.set({'autoClickSearch': checked}, _ => {
-    //     });
-    // })
-
-    // 跳转到汇率页面
-    // $('#btnGotoPage').click(() => {
-    //     bg.openUrlNewTab({url: 'http://srh.bankofchina.com/search/whpj/search.jsp'}, _ => {
-    //         sendMessageToContentScript({'cmd':'selectYenAndClickSearch'})
-    //     });
-    // });
-
-    // 获取当前页面
+    // 开始获取
     $('#startSpider').click(() => {
         getCurrentTabId((tabId) => {
-            console.log(bg.spiderInsts);
-            if (!bg.spiderInsts[tabId]) {
-                start();
-            } else {
-                let isRunning = bg.spiderInsts[tabId].isRunning;
-                console.log(isRunning)
-                if (isRunning === true) {
-                    stop();
-                } else {
-                    start();
-                }
+            if (!tabId) {
+                layer.msg("获取当前tab失败，请新建标签后重试!");
+                return;
             }
-            
+            console.log(bg.spiderInsts);
+            if (!bg.spiderInsts[tabId] || bg.spiderInsts[tabId].isRunning == false) {
+                let dest = $('#dest').val();
+                let dept = $('#dept').val();
+                let deptDate = $('#deptDate').val();
+                if (!bg.checkParamsValid(dept, dest, deptDate)) {
+                    layer.msg("当前城市不支持或参数有误");
+                    return;
+                }
+                start(dept, dest, deptDate);
+            } else {
+                stop();
+            }
         });
     });
 
@@ -116,11 +93,11 @@ $(function () {
             type: 'post',
             url: `${API_BASE}/feizhu/login`,
             contentType: 'application/json;charset=utf-8',
-            data: JSON.stringify({'workId': $('#txtWorkId').val(), 'password': $('#txtPassword').val()}),
+            data: JSON.stringify({ 'workId': $('#txtWorkId').val(), 'password': $('#txtPassword').val() }),
             success: resp => {
                 layer.msg("登陆成功");
                 bg.loginUser = resp;
-                chrome.storage.local.set({'loginUser': resp}, _ => {
+                chrome.storage.local.set({ 'loginUser': resp }, _ => {
                 });
                 $('#unLoginDiv').hide();
                 $('#loginDiv').show();
@@ -138,28 +115,31 @@ $(function () {
     });
 
     form.render();
+    laydate.render({
+        elem: '#deptDate'
+    })
 });
 
-function start() {
-    let dept = 'sha';
-    let dest = 'tyo';
-    let deptDate = '2020-03-29'
-
+function start(dept, dest, deptDate) {
     // invoke spider
-    bg.startSpider(dept, dest, deptDate);
-
+    bg.startSpider(dept, dest, deptDate).then(res => {
+        if (res === true) {
+            updateState(true);
+            layer.msg("启动成功");
+        } else {
+            layer.msg("启动失败");
+        }
+    });
 }
 
 function stop() {
-    let dept = 'sha';
-    let dest = 'tyo';
-    let deptDate = '2020-03-29'
-
     // invoke spider
-    bg.stopSpider();
-
+    bg.stopSpider().then(res => {
+        if (res === true) {
+            updateState(false);
+            layer.msg("停止成功");
+        } else {
+            layer.msg("停止失败");
+        }
+    })
 }
-
-
-
-

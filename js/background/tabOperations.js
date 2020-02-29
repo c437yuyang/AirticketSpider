@@ -10,9 +10,13 @@ function openUrlNewTab(data) {
 // 当前标签打开某个链接
 function openUrlCurrentTab(url, callback) {
     getCurrentTabId(tabId => {
-        chrome.tabs.update(tabId, { url: url }, function(tab) {
-            if(callback) {
-                callback(tab.id);
+        chrome.tabs.update(tabId, { url: url }, function (tab) {
+            if (callback) {
+                if (!tab) {
+                    callback(undefined);
+                } else {
+                    callback(tab.id);
+                }
             }
         });
     })

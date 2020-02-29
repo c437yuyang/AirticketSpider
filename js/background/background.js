@@ -13,43 +13,60 @@ chrome.runtime.onInstalled.addListener(function () {
 });
 
 let loginUser = undefined;
-var spiderInsts = {'a':'aa'};
+var spiderInsts = {};
+var surpportCityCodeMap = undefined;
 
 chrome.storage.local.remove('loginUser', _ => {
 });
 
 function startSpider(dept, dest, deptDate) {
     // open a new tab
-    // let url = `https://flights.ctrip.com/international/search/oneway-${dept}-${dest}?depdate=${deptDate}&cabin=y_s&adult=1&child=0&infant=0`;
-    let url = `http://www.baidu.com`;
-    openUrlCurrentTab(url, (tabId) => {
-        console.log(`${tabId} start`);
-        spiderInsts[tabId] = {}
-        spiderInsts[tabId].isRunning = true;
-        spiderInsts[tabId].dept = dept;
-        spiderInsts[tabId].dest = dest;
-        spiderInsts[tabId].deptDate = deptDate;
+    deptCode = surpportCityCodeMap[dept];
+    destCode = surpportCityCodeMap[dest];
+    let url = `https://flights.ctrip.com/international/search/oneway-${deptCode}-${destCode}?depdate=${deptDate}&cabin=y_s&adult=1&child=0&infant=0`;
+    console.log(url);
+    return new Promise(function(resolve){
+        openUrlCurrentTab(url, (tabId) => {
+            if(!tabId){
+                resolve(false);
+                return;
+            }
+            console.log(`${tabId} start, ${dept} -> ${dest} ${deptDate}`);
+            spiderInsts[tabId] = {}
+            spiderInsts[tabId].isRunning = true;
+            spiderInsts[tabId].dept = dept;
+            spiderInsts[tabId].dest = dest;
+            spiderInsts[tabId].deptDate = deptDate;
+            resolve(true);
+        });
     });
+    // let url = `http://www.baidu.com`;
+    
 }
 
 function stopSpider() {
-    getCurrentTabId((tabId) => {
-        console.log(`${tabId} stop`);
-        spiderInsts[tabId].isRunning = false;
-        spiderInsts[tabId].dept = '';
-        spiderInsts[tabId].dest = '';
-        spiderInsts[tabId].deptDate = '';
-    });
+    return new Promise(function (resolve) {
+        getCurrentTabId((tabId) => {
+            if (!tabId) {
+                resolve(false);
+                return;
+            }
+            console.log(`${tabId} stop`);
+            spiderInsts[tabId].isRunning = false;
+            spiderInsts[tabId].dept = '';
+            spiderInsts[tabId].dest = '';
+            spiderInsts[tabId].deptDate = '';
+            resolve(true);
+        });
+    })
 }
 
 setInterval(timerEvent, 10000);
 
-function setActiveTabId(id) { //必须要这样设置，不然popup.js直接bg.activeTabId = id 不生效不知道为什么
-    activeTabId = id;
-}
 
 function timerEvent() {
     queryNextTick();
+    queryConfig();
 }
 
 //向contentScript发送消息
@@ -93,14 +110,38 @@ function queryNextTick() {
                 type: 'post',
                 url: `${API_BASE}/spider/queryNextTick`,
                 contentType: 'application/x-www-form-urlencoded;charset=utf-8',
-                data: { dest: dest, dept: dept, deptDate: deptDate },
+                data: { dest: dest, dept: dept, deptDate: deptDate},
                 success: nextTick => {
+                    spider.nextTick = nextTick;
                     if (new Date().getTime() >= nextTick) {
-                        // reloadTab(tabId);
-                        console.log(`${tabId} reloading`);
+                        reloadTab(parseInt(tabId));
+                        console.log(`${tabId} reloading, ${dept} -> ${dest} ${deptDate}`);
                     }
                 },
             });
         }
     }
+}
+
+function queryConfig() {
+    $.ajax({
+        type: 'get',
+        url: `${API_BASE}/spider/queryConfig`,
+        success: config => {
+            surpportCityCodeMap = config.surpportCityCodeMap;
+        },
+    });
+}
+
+function checkParamsValid(dept, dest, deptDate) {
+    if (_.isEmpty(surpportCityCodeMap)) {
+        return false;
+    }
+    if (!deptDate) {
+        return false;
+    }
+    if (dept === dest) {
+        return false;
+    }
+    return !!surpportCityCodeMap[dept] && !!surpportCityCodeMap[dest];
 }
