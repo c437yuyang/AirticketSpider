@@ -56,6 +56,7 @@ function stopSpider() {
             spiderInsts[tabId].dept = '';
             spiderInsts[tabId].dest = '';
             spiderInsts[tabId].deptDate = '';
+            spiderInsts[tabId].nextTick = 0;
             resolve(true);
         });
     })
@@ -84,17 +85,9 @@ function sendMessageToContentScript(message, callback) {
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     console.log('收到来自content-script的消息：');
     console.log(request)
-    if (request.cmd === 'OpenNewTab') {
-        openUrlNewTab(request.data);
-    }
-    else if (request.cmd === 'CloseTab') {
-        closeTabs(request.data)
-    }
-    else if (request.cmd === 'OpenUrlInCurTab') {
-        openUrlCurrentTab(request.data)
-    }
-
-    sendResponse('我是后台，我已收到你的消息：' + JSON.stringify(request));
+    // if (request.cmd === 'postResponse') {
+    //     postResponse(request.data);
+    // }
 });
 
 function queryNextTick() {

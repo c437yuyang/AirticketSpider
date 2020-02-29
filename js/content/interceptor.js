@@ -45,16 +45,22 @@ function scrapeData() {
         requestIdleCallback(scrapeData);
     }
 }
-requestIdleCallback(scrapeData); 
+requestIdleCallback(scrapeData);
 
 requestIdleCallback(checkForDOM);
 
 function postResponse(resp) {
+    let dept = $('span[class="depart"]').text();
+    let dest = $('span[class="arrive"]').text();
     $.ajax({
         type: 'post',
         url: `${API_BASE}/spider/handle`,
         contentType: 'application/json;charset=utf-8',
-        data: resp,
+        data: JSON.stringify({
+            airInfos: JSON.parse(resp),
+            dept: dept,
+            dest: dest
+        }),
         success: _ => {
         },
     });

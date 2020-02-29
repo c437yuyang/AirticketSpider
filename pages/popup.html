@@ -25,7 +25,7 @@
         <script type=text/javascript src=assets/js/popup.js></script>
         <style type=text/css>
             body {
-                width: 310px;
+                width: 280px;
                 height: 600px;
             }
 
@@ -49,7 +49,7 @@
     <body>
         <div class="alert alert-success" style="text-align: center;font-size: 24px;"
              role="alert">
-            BOC Tools
+            AirTicket Tools
             <div id="unLoginDiv" style="position:absolute;right: 0px;top: 0px;color: red;font-size: 10px">当前未登录，点击
                 <button class="btn btn-primary" style="height: 20px;line-height: 8px;font-size: 8px" data-toggle="modal"
                         data-target="#exampleModal">登录
@@ -114,14 +114,11 @@
 
         
         <div class="layui-row">
-            <div class="layui-col-md4 layui-col-md-offset4">
+            <div class="layui-col-xs4 layui-col-xs-offset4">
                 <button id="startSpider" type="button" class="layui-btn layui-btn-sm layui-btn-radius">开始获取</button>
             </div>
         </div>
-
-
-        
-        <div style="margin-left: 20px;">最新发布时间：<span class="layui-badge layui-bg-green"
+        <div style="margin-left: 20px;margin-top: 20px;">最新发布时间：<span class="layui-badge layui-bg-green"
                                                        id="latestReleaseTime">22222</span>
             <br>下次刷新时间：<span class="layui-badge layui-bg-green"
                          id="nextTickTime">22222</span>

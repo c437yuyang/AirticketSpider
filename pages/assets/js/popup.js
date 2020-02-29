@@ -37,6 +37,7 @@ function updateState(isRunning) {
         $('#startSpider').addClass('layui-btn-danger');
         getCurrentTabId((tabId) => {
             if (!_.isNil(bg.spiderInsts[tabId])) {
+                $('#nextTickTime').show();
                 $('#nextTickTime').text(moment(bg.spiderInsts[tabId].nextTick).format('YYYY/MM/DD HH:mm:ss'));
                 $('#dept').val(bg.spiderInsts[tabId].dept);
                 $('#dest').val(bg.spiderInsts[tabId].dest);
@@ -49,6 +50,7 @@ function updateState(isRunning) {
         $('#deptDate').attr('disabled', false);
         $('#startSpider').text('开始获取');
         $('#startSpider').removeClass('layui-btn-danger');
+        $('#nextTickTime').hide();
     }
 
 }
@@ -116,7 +118,8 @@ $(function () {
 
     form.render();
     laydate.render({
-        elem: '#deptDate'
+        elem: '#deptDate',
+        position: 'fixed'
     })
 });
 
