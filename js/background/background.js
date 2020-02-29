@@ -107,7 +107,13 @@ function queryNextTick() {
                 success: nextTick => {
                     spider.nextTick = nextTick;
                     if (new Date().getTime() >= nextTick) {
-                        reloadTab(parseInt(tabId));
+                        // reloadTab(parseInt(tabId));
+                        deptCode = surpportCityCodeMap[dept];
+                        destCode = surpportCityCodeMap[dest];
+                        let url = `https://flights.ctrip.com/international/search/oneway-${deptCode}-${destCode}?depdate=${deptDate}&cabin=y_s&adult=1&child=0&infant=0`;
+                        let updateProperties = { 'active': true,url:url };
+                        chrome.tabs.update(parseInt(tabId), updateProperties);
+                        // chrome.tabs.highlight([parseInt(tabId)]);
                         console.log(`${tabId} reloading, ${dept} -> ${dest} ${deptDate}`);
                     }
                 },
