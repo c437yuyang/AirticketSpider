@@ -12,15 +12,18 @@ function interceptData() {
       }
       XHR.send = function() {
           this.addEventListener('load', function() {
-              if (this.url.includes('batchSearch')) {
+              if (this.url.includes('flights.ctrip.com/international/search/api/search/batchSearch') 
+                  || this.url.includes('flights.ctrip.com/international/search/api/search/pull')) {
                   console.log(this.response);
-                  var dataDOMElement = document.createElement('div');
-                  dataDOMElement.id = '__interceptedData';
-                  dataDOMElement.innerText = JSON.stringify(this.response);
-                  dataDOMElement.style.height = 0;
-                  dataDOMElement.style.overflow = 'hidden';
-                  document.body.appendChild(dataDOMElement);
-              }               
+                  if(this.response.data.context.finished === true) {
+                    var dataDOMElement = document.createElement('div');
+                    dataDOMElement.id = '__interceptedData';
+                    dataDOMElement.innerText = JSON.stringify(this.response);
+                    dataDOMElement.style.height = 0;
+                    dataDOMElement.style.overflow = 'hidden';
+                    document.body.appendChild(dataDOMElement);
+                  }
+              }
           });
           return send.apply(this, arguments);
       };
@@ -51,8 +54,9 @@ requestIdleCallback(checkForDOM);
 
 function postResponse(resp) {
     let depDate = getUrlParam('depDate');
+    let airInfos = JSON.parse(resp);
     let data = {
-        airInfos: JSON.parse(resp),
+        airInfos: airInfos,
         deptDate: depDate
     };
     sendMessageToBackground("postResponse", data);

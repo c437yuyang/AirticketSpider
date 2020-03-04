@@ -161,6 +161,7 @@ function checkParamsValid(dept, dest, deptDateFrom, deptDateTo) {
 
 function postResponse(tabId, data) {
     let spider = spiderInsts[tabId];
+    console.log(data);
     if (!spider) {
         console.log(`tabid ${tabId} spider instance not found`);
         return;
