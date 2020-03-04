@@ -8,19 +8,17 @@
 function sendMessageToBackground(cmd, data) {
     chrome.runtime.sendMessage({cmd: cmd, data: data}, function (response) {
         // tip();
-        console.log('收到来自后台的回复：' + response)
+        // console.log('收到来自后台的回复：' + response)
     });
 }
 
 //接收来自后台或者popup的消息
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-    // console.log(sender.tab ?"from a content script:" + sender.tab.url :"from the extension");
-    if (request.cmd === 'timerEvent') {
-        timerEvent();
-    }else if(request.cmd === 'getCurrentPage'){
-        getCurrentPage();
-    }
-});
+// chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+//     // console.log(sender.tab ?"from a content script:" + sender.tab.url :"from the extension");
+//     if (request.cmd === 'setSpiderParams') {
+//         setSpiderParams(request.data);
+//     }
+// });
 
 //对encodeURI()编码过的 URI 进行解码。并且获取其中的指定参数
 function getUrlParam(name) {
@@ -64,3 +62,13 @@ function getLoginUser(callback) {
         callback(res['loginUser']);
     });
 }
+
+// function setSpiderParams(params) {
+//     console.log('setParams', params);
+//     var dataDOMElement = document.createElement('div');
+//     dataDOMElement.id = '__spiderParams';
+//     dataDOMElement.innerText = JSON.stringify(params);
+//     dataDOMElement.style.height = 0;
+//     dataDOMElement.style.overflow = 'hidden';
+//     document.body.appendChild(dataDOMElement);
+// }

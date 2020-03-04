@@ -32,7 +32,8 @@ function updateState(isRunning) {
     if (isRunning === true) {
         $('#dest').attr('disabled', true);
         $('#dept').attr('disabled', true);
-        $('#deptDate').attr('disabled', true);
+        $('#deptDateFrom').attr('disabled', true);
+        $('#deptDateTo').attr('disabled', true);
         $('#startSpider').text('停止获取');
         $('#startSpider').addClass('layui-btn-danger');
         getCurrentTabId((tabId) => {
@@ -41,13 +42,15 @@ function updateState(isRunning) {
                 $('#nextTickTime').text(moment(bg.spiderInsts[tabId].nextTick).format('YYYY/MM/DD HH:mm:ss'));
                 $('#dept').val(bg.spiderInsts[tabId].dept);
                 $('#dest').val(bg.spiderInsts[tabId].dest);
-                $('#deptDate').val(bg.spiderInsts[tabId].deptDate);
+                $('#deptDateFrom').val(bg.spiderInsts[tabId].deptDateFrom);
+                $('#deptDateTo').val(bg.spiderInsts[tabId].deptDateTo);
             }
         })
     } else {
         $('#dest').attr('disabled', false);
         $('#dept').attr('disabled', false);
-        $('#deptDate').attr('disabled', false);
+        $('#deptDateFrom').attr('disabled', false);
+        $('#deptDateTo').attr('disabled', false);
         $('#startSpider').text('开始获取');
         $('#startSpider').removeClass('layui-btn-danger');
         $('#nextTickTime').hide();
@@ -77,12 +80,13 @@ $(function () {
             if (!bg.spiderInsts[tabId] || bg.spiderInsts[tabId].isRunning == false) {
                 let dest = $('#dest').val();
                 let dept = $('#dept').val();
-                let deptDate = $('#deptDate').val();
-                if (!bg.checkParamsValid(dept, dest, deptDate)) {
+                let deptDateFrom = $('#deptDateFrom').val();
+                let deptDateTo = $('#deptDateTo').val();
+                if (!bg.checkParamsValid(dept, dest, deptDateFrom, deptDateTo)) {
                     layer.msg("当前城市不支持或参数有误");
                     return;
                 }
-                start(dept, dest, deptDate);
+                start(dept, dest, deptDateFrom, deptDateTo);
             } else {
                 stop();
             }
@@ -118,14 +122,15 @@ $(function () {
 
     form.render();
     laydate.render({
-        elem: '#deptDate',
+        // elem: '#deptDateFrom',
+        // elem: '#deptDateTo',
         position: 'fixed'
     })
 });
 
-function start(dept, dest, deptDate) {
+function start(dept, dest, deptDateFrom, detptDateTo) {
     // invoke spider
-    bg.startSpider(dept, dest, deptDate).then(res => {
+    bg.startSpider(dept, dest, deptDateFrom, detptDateTo).then(res => {
         if (res === true) {
             updateState(true);
             layer.msg("启动成功");
