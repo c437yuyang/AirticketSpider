@@ -46,3 +46,19 @@ function getCurrentTabId(callback) {
         if (callback) callback(tabs.length ? tabs[0].id : null);
     });
 }
+
+// 检查指定id的tab是否存在
+function checkTabExist(tabId) {
+    return new Promise(
+        (resolve, reject) => {
+            chrome.tabs.get(tabId, function (tab) {
+                if (chrome.runtime.lastError) {
+                    var errorMsg = chrome.runtime.lastError.message
+                    console.log(errorMsg);
+                    resolve(false);
+                }
+                resolve(true);
+            });
+        }
+    );
+}

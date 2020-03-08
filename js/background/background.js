@@ -44,7 +44,7 @@ function getSpiderUrl(spiderInst, deptDate) {
     if (spiderInst.spiderType === "单程") {
         return `https://flights.ctrip.com/international/search/oneway-${deptCode}-${destCode}?depdate=${deptDate}&cabin=y_s&adult=1&child=0&infant=0`;
     } else {
-        let returnDate = getReturnDate(deptDateFrom, spiderInst.returnAfterDays);
+        let returnDate = getReturnDate(deptDate, spiderInst.returnAfterDays);
         return `https://flights.ctrip.com/international/search/round-${deptCode}-${destCode}?depdate=${deptDate}_${returnDate}&cabin=y_s&adult=1&child=0&infant=0&isbuildup=1`;
     }
 }
@@ -154,27 +154,34 @@ function queryNextTick() {
         if (!spider)
             continue;
         if (spider.isRunning === true) {
-            let dest = spider.dest;
-            let dept = spider.dept;
-            let deptDateFrom = spider.deptDateFrom;
-            let deptDateTo = spider.deptDateTo;
-            let spiderType = spider.spiderType;
-            let returnAfterDays = spider.returnAfterDays;
-            $.ajax({
-                type: 'post',
-                url: `${API_BASE}/spider/tick`,
-                contentType: 'application/json;charset=utf-8',
-                data: JSON.stringify({ dest: dest, dept: dept, deptFrom: deptDateFrom, deptTo: deptDateTo, spiderType: spiderType, returnAfterDays: returnAfterDays }),
-                success: resp => {
-                    if(resp.needRun === true) {
-                        let deptDate = resp.params.deptDate;
-                        let url = getSpiderUrl(spider, deptDate);
-                        let updateProperties = { 'active': true,url:url };
-                        chrome.tabs.update(parseInt(tabId), updateProperties);
-                        console.log(`${tabId} reloading, ${dept} -> ${dest} ${deptDate}`);
-                    }
-                    console.log(resp);
-                },
+            checkTabExist(parseInt(tabId)).then(exist => {
+                if (!exist) {
+                    console.log(`tabId:${tabId} not found, destoying spider inst`);
+                    spider.isRunning = false;
+                    return;
+                }
+                let dest = spider.dest;
+                let dept = spider.dept;
+                let deptDateFrom = spider.deptDateFrom;
+                let deptDateTo = spider.deptDateTo;
+                let spiderType = spider.spiderType;
+                let returnAfterDays = spider.returnAfterDays;
+                $.ajax({
+                    type: 'post',
+                    url: `${API_BASE}/spider/tick`,
+                    contentType: 'application/json;charset=utf-8',
+                    data: JSON.stringify({ dest: dest, dept: dept, deptFrom: deptDateFrom, deptTo: deptDateTo, spiderType: spiderType, returnAfterDays: returnAfterDays }),
+                    success: resp => {
+                        console.log(`${tabId} querying, ${dept} -> ${dest}, resp:`, resp);
+                        if (resp.needRun === true) {
+                            let deptDate = resp.params.deptDate;
+                            let url = getSpiderUrl(spider, deptDate);
+                            let updateProperties = { 'active': true, url: url };
+                            chrome.tabs.update(parseInt(tabId), updateProperties);
+                            console.log(`${tabId} reloading, ${dept} -> ${dest} ${deptDate}`);
+                        }
+                    },
+                });
             });
         }
     }
