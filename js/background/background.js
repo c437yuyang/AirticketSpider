@@ -121,7 +121,7 @@ function stopSpider() {
 }
 
 queryConfig(); //立即触发一次  加载配置
-setInterval(timerEvent, 20000);
+setInterval(timerEvent, 60000);
 
 function timerEvent() {
     queryNextTick();

@@ -56,6 +56,7 @@ function checkTabExist(tabId) {
                     var errorMsg = chrome.runtime.lastError.message
                     console.log(errorMsg);
                     resolve(false);
+                    return;
                 }
                 resolve(true);
             });

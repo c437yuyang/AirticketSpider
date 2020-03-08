@@ -2,22 +2,6 @@
 var bg = chrome.extension.getBackgroundPage();
 var layer = layui.layer, form = layui.form, laydate = layui.laydate;
 
-// 获取当前选项卡ID
-function getCurrentTabId(callback) {
-    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-        if (callback) callback(tabs.length ? tabs[0].id : null);
-    });
-}
-
-// 这2个获取当前选项卡id的方法大部分时候效果都一致，只有少部分时候会不一样
-function getCurrentTabId2() {
-    chrome.windows.getCurrent(function (currentWindow) {
-        chrome.tabs.query({ active: true, windowId: currentWindow.id }, function (tabs) {
-            if (callback) callback(tabs.length ? tabs[0].id : null);
-        });
-    });
-}
-
 // 向content-script主动发送消息
 function sendMessageToContentScript(message, callback) {
     getCurrentTabId((tabId) => {
@@ -28,7 +12,7 @@ function sendMessageToContentScript(message, callback) {
     });
 }
 
-function updateState(isRunning) {
+async function updateState(isRunning) {
     if (isRunning === true) {
         $('#dest').attr('disabled', true);
         $('#dept').attr('disabled', true);
@@ -39,18 +23,17 @@ function updateState(isRunning) {
         $('#returnAfterDays').attr('disabled', true);
         $('#startSpider').text('停止获取');
         $('#startSpider').addClass('layui-btn-danger');
-        getCurrentTabId((tabId) => {
-            if (!_.isNil(bg.spiderInsts[tabId])) {
-                $('#nextTickTime').show();
-                $('#nextTickTime').text(moment(bg.spiderInsts[tabId].nextTick).format('YYYY/MM/DD HH:mm:ss'));
-                $('#dept').val(bg.spiderInsts[tabId].dept);
-                $('#dest').val(bg.spiderInsts[tabId].dest);
-                $('#deptDateFrom').val(bg.spiderInsts[tabId].deptDateFrom);
-                $('#deptDateTo').val(bg.spiderInsts[tabId].deptDateTo);
-                $(`input[name="spiderType"][value="${bg.spiderInsts[tabId].spiderType}"]`).prop('checked', "true");
-                $('#returnAfterDays').val(bg.spiderInsts[tabId].returnAfterDays);
-            }
-        })
+        let tabId = await getCurrentTabIdAsync();
+        if (!_.isNil(bg.spiderInsts[tabId])) {
+            $('#nextTickTime').show();
+            $('#nextTickTime').text(moment(bg.spiderInsts[tabId].nextTick).format('YYYY/MM/DD HH:mm:ss'));
+            $('#dept').val(bg.spiderInsts[tabId].dept);
+            $('#dest').val(bg.spiderInsts[tabId].dest);
+            $('#deptDateFrom').val(bg.spiderInsts[tabId].deptDateFrom);
+            $('#deptDateTo').val(bg.spiderInsts[tabId].deptDateTo);
+            $(`input[name="spiderType"][value="${bg.spiderInsts[tabId].spiderType}"]`).prop('checked', "true");
+            $('#returnAfterDays').val(bg.spiderInsts[tabId].returnAfterDays);
+        }
     } else {
         $('#dest').attr('disabled', false);
         $('#dept').attr('disabled', false);
@@ -62,49 +45,53 @@ function updateState(isRunning) {
         $('#startSpider').removeClass('layui-btn-danger');
         $('#nextTickTime').hide();
     }
+    form.render();
+    // 
+    // laydate.render({
+    //     // elem: '#deptDateFrom',
+    //     // elem: '#deptDateTo',
+    //     position: 'fixed'
+    // })
+}
 
+async function updateTabState() {
+    let tabId = await getCurrentTabIdAsync();
+    if (!bg.spiderInsts[tabId] || !bg.spiderInsts[tabId].isRunning) {
+        updateState(false);
+    } else {
+        updateState(true);
+    }
 }
 
 $(function () {
-    getCurrentTabId((tabId) => {
-        if (!bg.spiderInsts[tabId] || !bg.spiderInsts[tabId].isRunning) {
-            updateState(false);
-        } else {
-            updateState(true);
-        }
-    });
+    updateTabState();
 
     // 开始获取
-    $('#startSpider').click(() => {
-        // let urgency = $('input[name="spiderType"]:checked ').val();
-        // console.log(urgency);
-        // console.log($('input[name="spiderType"]'));
-        // $('input[name="spiderType"][value="单程"]').prop('checked', "true");
-        // form.render();
-        // return;
-
-        getCurrentTabId((tabId) => {
-            if (!tabId) {
-                layer.msg("获取当前tab失败，请新建标签后重试!");
+    $('#startSpider').click(async () => {
+        let tabId;
+        try {
+            tabId = await getCurrentTabIdAsync();
+            console.log(tabId);
+        } catch (err) {
+            layer.msg("获取当前tab失败，请新建标签后重试!");
+            return;
+        }
+        console.log(bg.spiderInsts);
+        if (!bg.spiderInsts[tabId] || bg.spiderInsts[tabId].isRunning == false) {
+            let dest = $('#dest').val();
+            let dept = $('#dept').val();
+            let deptDateFrom = $('#deptDateFrom').val();
+            let deptDateTo = $('#deptDateTo').val();
+            let spiderType = $('input[name="spiderType"]:checked ').val();
+            let returnAfterDays = $('#returnAfterDays').val();
+            if (!bg.checkParamsValid(dept, dest, deptDateFrom, deptDateTo, spiderType, returnAfterDays)) {
+                layer.msg("当前城市不支持或参数有误");
                 return;
             }
-            console.log(bg.spiderInsts);
-            if (!bg.spiderInsts[tabId] || bg.spiderInsts[tabId].isRunning == false) {
-                let dest = $('#dest').val();
-                let dept = $('#dept').val();
-                let deptDateFrom = $('#deptDateFrom').val();
-                let deptDateTo = $('#deptDateTo').val();
-                let spiderType = $('input[name="spiderType"]:checked ').val();
-                let returnAfterDays = $('#returnAfterDays').val();
-                if (!bg.checkParamsValid(dept, dest, deptDateFrom, deptDateTo, spiderType, returnAfterDays)) {
-                    layer.msg("当前城市不支持或参数有误");
-                    return;
-                }
-                start(dept, dest, deptDateFrom, deptDateTo, spiderType, returnAfterDays);
-            } else {
-                stop();
-            }
-        });
+            start(dept, dest, deptDateFrom, deptDateTo, spiderType, returnAfterDays);
+        } else {
+            stop();
+        }
     });
 
     //登陆按钮
@@ -133,13 +120,6 @@ $(function () {
             },
         });
     });
-
-    form.render();
-    // laydate.render({
-    //     // elem: '#deptDateFrom',
-    //     // elem: '#deptDateTo',
-    //     position: 'fixed'
-    // })
 });
 
 function start(dept, dest, deptDateFrom, detptDateTo, spiderType, returnAfterDays) {
