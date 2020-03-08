@@ -14,8 +14,8 @@ function interceptData() {
           this.addEventListener('load', function() {
               if (this.url.includes('flights.ctrip.com/international/search/api/search/batchSearch') 
                   || this.url.includes('flights.ctrip.com/international/search/api/search/pull')) {
-                  console.log(this.response);
-                  if(this.response.data.context.finished === true) {
+                  console.log(this.response.data.flightItineraryList)
+                  if(this.response.data.flightItineraryList) {
                     var dataDOMElement = document.createElement('div');
                     dataDOMElement.id = '__interceptedData';
                     dataDOMElement.innerText = JSON.stringify(this.response);

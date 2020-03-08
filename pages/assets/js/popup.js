@@ -34,6 +34,9 @@ function updateState(isRunning) {
         $('#dept').attr('disabled', true);
         $('#deptDateFrom').attr('disabled', true);
         $('#deptDateTo').attr('disabled', true);
+        $('#spiderType').attr('disabled', true);
+        $(`input[name="spiderType"]`).attr('disabled', true);
+        $('#returnAfterDays').attr('disabled', true);
         $('#startSpider').text('停止获取');
         $('#startSpider').addClass('layui-btn-danger');
         getCurrentTabId((tabId) => {
@@ -44,6 +47,8 @@ function updateState(isRunning) {
                 $('#dest').val(bg.spiderInsts[tabId].dest);
                 $('#deptDateFrom').val(bg.spiderInsts[tabId].deptDateFrom);
                 $('#deptDateTo').val(bg.spiderInsts[tabId].deptDateTo);
+                $(`input[name="spiderType"][value="${bg.spiderInsts[tabId].spiderType}"]`).prop('checked', "true");
+                $('#returnAfterDays').val(bg.spiderInsts[tabId].returnAfterDays);
             }
         })
     } else {
@@ -51,6 +56,8 @@ function updateState(isRunning) {
         $('#dept').attr('disabled', false);
         $('#deptDateFrom').attr('disabled', false);
         $('#deptDateTo').attr('disabled', false);
+        $(`input[name="spiderType"]`).attr('disabled', false);
+        $('#returnAfterDays').attr('disabled', false);
         $('#startSpider').text('开始获取');
         $('#startSpider').removeClass('layui-btn-danger');
         $('#nextTickTime').hide();
@@ -61,16 +68,21 @@ function updateState(isRunning) {
 $(function () {
     getCurrentTabId((tabId) => {
         if (!bg.spiderInsts[tabId] || !bg.spiderInsts[tabId].isRunning) {
-            console.log('a');
             updateState(false);
         } else {
-            console.log('b');
             updateState(true);
         }
     });
 
     // 开始获取
     $('#startSpider').click(() => {
+        // let urgency = $('input[name="spiderType"]:checked ').val();
+        // console.log(urgency);
+        // console.log($('input[name="spiderType"]'));
+        // $('input[name="spiderType"][value="单程"]').prop('checked', "true");
+        // form.render();
+        // return;
+
         getCurrentTabId((tabId) => {
             if (!tabId) {
                 layer.msg("获取当前tab失败，请新建标签后重试!");
@@ -82,11 +94,13 @@ $(function () {
                 let dept = $('#dept').val();
                 let deptDateFrom = $('#deptDateFrom').val();
                 let deptDateTo = $('#deptDateTo').val();
-                if (!bg.checkParamsValid(dept, dest, deptDateFrom, deptDateTo)) {
+                let spiderType = $('input[name="spiderType"]:checked ').val();
+                let returnAfterDays = $('#returnAfterDays').val();
+                if (!bg.checkParamsValid(dept, dest, deptDateFrom, deptDateTo, spiderType, returnAfterDays)) {
                     layer.msg("当前城市不支持或参数有误");
                     return;
                 }
-                start(dept, dest, deptDateFrom, deptDateTo);
+                start(dept, dest, deptDateFrom, deptDateTo, spiderType, returnAfterDays);
             } else {
                 stop();
             }
@@ -121,16 +135,16 @@ $(function () {
     });
 
     form.render();
-    laydate.render({
-        // elem: '#deptDateFrom',
-        // elem: '#deptDateTo',
-        position: 'fixed'
-    })
+    // laydate.render({
+    //     // elem: '#deptDateFrom',
+    //     // elem: '#deptDateTo',
+    //     position: 'fixed'
+    // })
 });
 
-function start(dept, dest, deptDateFrom, detptDateTo) {
+function start(dept, dest, deptDateFrom, detptDateTo, spiderType, returnAfterDays) {
     // invoke spider
-    bg.startSpider(dept, dest, deptDateFrom, detptDateTo).then(res => {
+    bg.startSpider(dept, dest, deptDateFrom, detptDateTo, spiderType, returnAfterDays).then(res => {
         if (res === true) {
             updateState(true);
             layer.msg("启动成功");
