@@ -189,19 +189,40 @@ function queryConfig() {
 }
 
 function checkParamsValid(dept, dest, deptDateFrom, deptDateTo, spiderType, returnAfterDays) {
+    let res = {};
+    res.success = false;
     if (_.isEmpty(surpportCityCodeMap)) {
-        return false;
+        res.errMsg = "加载城市列表配置失败，请稍等";
+        return res;
     }
     if (!deptDateFrom || !deptDateTo) {
-        return false;
+        res.errMsg = "起始和结束出发日期不能为空";
+        return res;
     }
     if (dept === dest) {
-        return false;
+        res.errMsg = "出发城市与到达城市不能相同";
+        return res;
     }
     if (spiderType === "往返" && !returnAfterDays) {
-        return false;
+        res.errMsg = "往返模式必须填写返回时间";
+        return res;
     }
-    return !!surpportCityCodeMap[dept] && !!surpportCityCodeMap[dest];
+    var returnDaysPattern = /^\d{1,2}$/;
+    if (!returnDaysPattern.test(returnAfterDays)) {
+        res.errMsg = "返回时间不正确，请填写两位数";
+        return res;
+    }
+    var datePattern = /^\d{4}-\d{2}-\d{2}$/;
+    if (!datePattern.test(deptDateFrom) || !datePattern.test(deptDateTo)) {
+        res.errMsg = "日期格式错误, 请填写如:2020-04-01";
+        return res;
+    }
+    if (!surpportCityCodeMap[dept] || !surpportCityCodeMap[dest]) {
+        res.errMsg = "选择地区不受支持,请先进行配置!";
+        return res;
+    }
+    res.success = true;
+    return res;
 }
 
 function postResponse(tabId, data) {

@@ -84,41 +84,15 @@ $(function () {
             let deptDateTo = $('#deptDateTo').val();
             let spiderType = $('input[name="spiderType"]:checked ').val();
             let returnAfterDays = $('#returnAfterDays').val();
-            if (!bg.checkParamsValid(dept, dest, deptDateFrom, deptDateTo, spiderType, returnAfterDays)) {
-                layer.msg("当前城市不支持或参数有误");
+            let res =bg.checkParamsValid(dept, dest, deptDateFrom, deptDateTo, spiderType, returnAfterDays);
+            if (!res.success) {
+                layer.msg(res.errMsg);
                 return;
             }
             start(dept, dest, deptDateFrom, deptDateTo, spiderType, returnAfterDays);
         } else {
             stop();
         }
-    });
-
-    //登陆按钮
-    $('#btnLogin').click(function () {
-        $.ajax({
-            type: 'post',
-            url: `${API_BASE}/feizhu/login`,
-            contentType: 'application/json;charset=utf-8',
-            data: JSON.stringify({ 'workId': $('#txtWorkId').val(), 'password': $('#txtPassword').val() }),
-            success: resp => {
-                layer.msg("登陆成功");
-                bg.loginUser = resp;
-                chrome.storage.local.set({ 'loginUser': resp }, _ => {
-                });
-                $('#unLoginDiv').hide();
-                $('#loginDiv').show();
-                $('#userName').text(bg.loginUser.userName);
-                $('#hideLoginForm').click();
-            },
-            statusCode: {
-                400: function () {
-                    layer.msg('用户名密码错误');
-                }, 404: function () {
-                    layer.msg('无此用户');
-                }
-            },
-        });
     });
 });
 
