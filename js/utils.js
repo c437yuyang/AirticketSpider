@@ -12,3 +12,13 @@ function randomNum(minNum, maxNum) {
             break;
     }
 }
+
+//对encodeURI()编码过的 URI 进行解码。并且获取其中的指定参数
+function getUrlParam(name) {
+    let reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
+    let r = window.location.search.substr(1).match(reg);
+    if (r != null) {
+        return decodeURI(r[2]);
+    }
+    return "";
+}

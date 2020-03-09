@@ -142,59 +142,50 @@ function sendMessageToContentScript(message, callback) {
 // 监听来自content-script的消息
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     let tabId = sender.tab.id;
-    console.log(`postResponse from tabid:${tabId}`);
     if (request.cmd === 'postResponse') {
         postResponse(tabId, request.data);
     }
 });
 
-function queryNextTick() {
+async function queryNextTick() {
     for (let tabId in spiderInsts) {
         let spider = spiderInsts[tabId];
-        if (!spider)
+        if (!spider || !spider.isRunning){
             continue;
-        if (spider.isRunning === true) {
-            checkTabExist(parseInt(tabId)).then(exist => {
-                if (!exist) {
-                    console.log(`tabId:${tabId} not found, destoying spider inst`);
-                    spider.isRunning = false;
+        }
+        
+        let tabExist = await checkTabExist(parseInt(tabId));
+        if (!tabExist) {
+            console.log(`tabId:${tabId} not found, destoying spider inst`);
+            spider.isRunning = false;
+            continue;
+        }
+
+        let { dest, dept, deptDateFrom, deptDateTo, spiderType, returnAfterDays } = spider;
+        httpPostJson(`${API_BASE}/spider/tick`, { dest, dept, deptFrom: deptDateFrom, deptTo: deptDateTo, spiderType, returnAfterDays })
+            .then(resp => {
+                console.log(`${tabId} querying, ${dept} -> ${dest}, resp:`, resp);
+                if (!resp.needRun) {
                     return;
                 }
-                let dest = spider.dest;
-                let dept = spider.dept;
-                let deptDateFrom = spider.deptDateFrom;
-                let deptDateTo = spider.deptDateTo;
-                let spiderType = spider.spiderType;
-                let returnAfterDays = spider.returnAfterDays;
-                $.ajax({
-                    type: 'post',
-                    url: `${API_BASE}/spider/tick`,
-                    contentType: 'application/json;charset=utf-8',
-                    data: JSON.stringify({ dest: dest, dept: dept, deptFrom: deptDateFrom, deptTo: deptDateTo, spiderType: spiderType, returnAfterDays: returnAfterDays }),
-                    success: resp => {
-                        console.log(`${tabId} querying, ${dept} -> ${dest}, resp:`, resp);
-                        if (resp.needRun === true) {
-                            let deptDate = resp.params.deptDate;
-                            let url = getSpiderUrl(spider, deptDate);
-                            let updateProperties = { 'active': true, url: url };
-                            chrome.tabs.update(parseInt(tabId), updateProperties);
-                            console.log(`${tabId} reloading, ${dept} -> ${dest} ${deptDate}`);
-                        }
-                    },
-                });
+                let deptDate = resp.params.deptDate;
+                let url = getSpiderUrl(spider, deptDate);
+                let updateProperties = { 'active': true, url: url };
+                chrome.tabs.update(parseInt(tabId), updateProperties);
+                console.log(`${tabId} reloading, ${dept} -> ${dest} ${deptDate}`);
+            })
+            .catch(err => {
+                console.log(err);
             });
-        }
     }
 }
 
 function queryConfig() {
-    $.ajax({
-        type: 'get',
-        url: `${API_BASE}/spider/queryConfig`,
-        success: config => {
-            surpportCityCodeMap = config.surpportCityCodeMap;
-        },
-    });
+    httpGet(`${API_BASE}/spider/queryConfig`).then(config => {
+        surpportCityCodeMap = config.surpportCityCodeMap;
+    }).catch(err => {
+        console.log(err);
+    })
 }
 
 function checkParamsValid(dept, dest, deptDateFrom, deptDateTo, spiderType, returnAfterDays) {
@@ -215,7 +206,7 @@ function checkParamsValid(dept, dest, deptDateFrom, deptDateTo, spiderType, retu
 
 function postResponse(tabId, data) {
     let spider = spiderInsts[tabId];
-    console.log(data);
+    console.log(`post data from tab: ${tabId}, ${spider.dept}->${spider.dest}, data:`, data);
     if (!spider) {
         console.log(`tabid ${tabId} spider instance not found`);
         return;
@@ -226,12 +217,5 @@ function postResponse(tabId, data) {
     data.deptTo = spider.deptDateTo;
     data.spiderType = spider.spiderType;
     data.returnAfterDays = spider.returnAfterDays;
-    $.ajax({
-        type: 'post',
-        url: `${API_BASE}/spider/handle`,
-        contentType: 'application/json;charset=utf-8',
-        data: JSON.stringify(data),
-        success: _ => {
-        },
-    });
+    httpPostJson(`${API_BASE}/spider/handle`, data).catch(err => { console.log(err) });
 }

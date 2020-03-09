@@ -31,6 +31,7 @@
         "https://flights.ctrip.com/international/search*"
       ],
       "js": [
+        "js/utils.js",
         "js/libs/jquery-1.8.3.js",
         "js/content/interceptor.js"
       ],
@@ -39,10 +40,12 @@
   ],
   "background": {
     "scripts": [
-      "js/libs/jquery-1.8.3.js",
       "js/defines.js",
+      "js/libs/jquery-1.8.3.js",
       "js/libs/lodash.js",
       "js/libs/moment.js",
+      "js/wrapper/request-wrapper.js",
+      "js/wrapper/tabs-api-wrapper.js",
       "js/background/tabOperations.js",
       "js/background/background.js",
       "js/background/contextMenu.js"
