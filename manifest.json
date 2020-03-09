@@ -20,8 +20,8 @@
         "https://flights.ctrip.com/international/search*"
       ],
       "js": [
-        "js/common.js",
-        "js/moment.js",
+        "js/defines.js",
+        "js/libs/moment.js",
         "js/content/content-script.js"
       ],
       "run_at": "document_start"
@@ -31,7 +31,7 @@
         "https://flights.ctrip.com/international/search*"
       ],
       "js": [
-        "js/jquery-1.8.3.js",
+        "js/libs/jquery-1.8.3.js",
         "js/content/interceptor.js"
       ],
       "run_at": "document_start"
@@ -39,10 +39,10 @@
   ],
   "background": {
     "scripts": [
-      "js/jquery-1.8.3.js",
-      "js/common.js",
-      "js/lodash.js",
-      "js/moment.js",
+      "js/libs/jquery-1.8.3.js",
+      "js/defines.js",
+      "js/libs/lodash.js",
+      "js/libs/moment.js",
       "js/background/tabOperations.js",
       "js/background/background.js",
       "js/background/contextMenu.js"
