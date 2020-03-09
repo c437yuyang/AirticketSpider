@@ -38,23 +38,29 @@ function getSpiderUrl(spiderInst, deptDate) {
     }
     let dest = spiderInst.dest;
     let dept = spiderInst.dept;
-    let deptDateFrom = spiderInst.deptDateFrom;
     let deptCode = surpportCityCodeMap[dept];
     let destCode = surpportCityCodeMap[dest];
     if (spiderInst.spiderType === "单程") {
-        return `https://flights.ctrip.com/international/search/oneway-${deptCode}-${destCode}?depdate=${deptDate}&cabin=y_s&adult=1&child=0&infant=0`;
+        return getSingleUrl(deptCode, destCode, deptDate);
     } else {
         let returnDate = getReturnDate(deptDate, spiderInst.returnAfterDays);
-        return `https://flights.ctrip.com/international/search/round-${deptCode}-${destCode}?depdate=${deptDate}_${returnDate}&cabin=y_s&adult=1&child=0&infant=0&isbuildup=1`;
+        return getRountUrl(deptCode, destCode, deptDate, returnDate);
     }
+}
+
+function getSingleUrl(deptCode, destCode, deptDate) {
+    return `https://flights.ctrip.com/international/search/oneway-${deptCode}-${destCode}?depdate=${deptDate}&cabin=y_s&adult=1&child=0&infant=0`;
+}
+
+function getRountUrl(deptCode, destCode, deptDate, returnDate) {
+    return `https://flights.ctrip.com/international/search/round-${deptCode}-${destCode}?depdate=${deptDate}_${returnDate}&cabin=y_s&adult=1&child=0&infant=0&isbuildup=1`;;
 }
 
 function startSingleSpider(dept, dest, deptDateFrom, deptDateTo) {
     // open a new tab
-    deptCode = surpportCityCodeMap[dept];
-    destCode = surpportCityCodeMap[dest];
-
-    let singleUrl = `https://flights.ctrip.com/international/search/oneway-${deptCode}-${destCode}?depdate=${deptDateFrom}&cabin=y_s&adult=1&child=0&infant=0`;
+    let deptCode = surpportCityCodeMap[dept];
+    let destCode = surpportCityCodeMap[dest];
+    let singleUrl = getSingleUrl(deptCode, destCode, deptDateFrom);
     console.log(singleUrl);
     return new Promise(function(resolve){
         openUrlCurrentTab(singleUrl, (tabId) => {
@@ -77,11 +83,11 @@ function startSingleSpider(dept, dest, deptDateFrom, deptDateTo) {
 
 function startRoundSpider(dept, dest, deptDateFrom, deptDateTo, returnAfterDays) {
     // open a new tab
-    deptCode = surpportCityCodeMap[dept];
-    destCode = surpportCityCodeMap[dest];
+    let deptCode = surpportCityCodeMap[dept];
+    let destCode = surpportCityCodeMap[dest];
     
     let returnDate = getReturnDate(deptDateFrom, returnAfterDays); 
-    let roundUrl = `https://flights.ctrip.com/international/search/round-${deptCode}-${destCode}?depdate=${deptDateFrom}_${returnDate}&cabin=y_s&adult=1&child=0&infant=0&isbuildup=1`;
+    let roundUrl = getRountUrl(deptCode, destCode, deptDateFrom, returnDate);
     console.log(roundUrl);
     return new Promise(function(resolve) {
         openUrlCurrentTab(roundUrl, (tabId) => {
@@ -208,7 +214,7 @@ function checkParamsValid(dept, dest, deptDateFrom, deptDateTo, spiderType, retu
         return res;
     }
     var returnDaysPattern = /^\d{1,2}$/;
-    if (!returnDaysPattern.test(returnAfterDays)) {
+    if (spiderType === "往返" && !returnDaysPattern.test(returnAfterDays)) {
         res.errMsg = "返回时间不正确，请填写两位数";
         return res;
     }
