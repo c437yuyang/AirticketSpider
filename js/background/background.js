@@ -56,59 +56,55 @@ function getRountUrl(deptCode, destCode, deptDate, returnDate) {
     return `https://flights.ctrip.com/international/search/round-${deptCode}-${destCode}?depdate=${deptDate}_${returnDate}&cabin=y_s&adult=1&child=0&infant=0&isbuildup=1`;;
 }
 
-function startSingleSpider(dept, dest, deptDateFrom, deptDateTo) {
+async function startSingleSpider(dept, dest, deptDateFrom, deptDateTo) {
     // open a new tab
     let deptCode = surpportCityCodeMap[dept];
     let destCode = surpportCityCodeMap[dest];
     let singleUrl = getSingleUrl(deptCode, destCode, deptDateFrom);
     console.log(singleUrl);
-    return new Promise(function(resolve){
-        openUrlCurrentTab(singleUrl, (tabId) => {
-            if(!tabId){
-                resolve(false);
-                return;
-            }
-            console.log(`${tabId} start, ${dept} -> ${dest} deptDate:${deptDateFrom}=>${deptDateTo}`);
-            spiderInsts[tabId] = {}
-            spiderInsts[tabId].spiderType = '单程';
-            spiderInsts[tabId].isRunning = true;
-            spiderInsts[tabId].dept = dept;
-            spiderInsts[tabId].dest = dest;
-            spiderInsts[tabId].deptDateFrom = deptDateFrom;
-            spiderInsts[tabId].deptDateTo = deptDateTo;
-            resolve(true);
-        });
+    let tabId = await openUrlCurrentTabAsync(singleUrl);
+    return new Promise((resolve) => {
+        if (!tabId) {
+            resolve(false);
+            return;
+        }
+        console.log(`${tabId} start, ${dept} -> ${dest} deptDate:${deptDateFrom}=>${deptDateTo}`);
+        spiderInsts[tabId] = {}
+        spiderInsts[tabId].spiderType = '单程';
+        spiderInsts[tabId].isRunning = true;
+        spiderInsts[tabId].dept = dept;
+        spiderInsts[tabId].dest = dest;
+        spiderInsts[tabId].deptDateFrom = deptDateFrom;
+        spiderInsts[tabId].deptDateTo = deptDateTo;
+        resolve(true);
     });
 }
 
-function startRoundSpider(dept, dest, deptDateFrom, deptDateTo, returnAfterDays) {
+async function startRoundSpider(dept, dest, deptDateFrom, deptDateTo, returnAfterDays) {
     // open a new tab
     let deptCode = surpportCityCodeMap[dept];
     let destCode = surpportCityCodeMap[dest];
-    
     let returnDate = getReturnDate(deptDateFrom, returnAfterDays); 
     let roundUrl = getRountUrl(deptCode, destCode, deptDateFrom, returnDate);
     console.log(roundUrl);
-    return new Promise(function(resolve) {
-        openUrlCurrentTab(roundUrl, (tabId) => {
-            if(!tabId){
-                resolve(false);
-                return;
-            }
-            console.log(`${tabId} round spider start, ${dept} -> ${dest} deptDate:${deptDateFrom}=>${deptDateTo} returnAfter:${returnAfterDays}`);
-            spiderInsts[tabId] = {}
-            spiderInsts[tabId].spiderType = '往返';
-            spiderInsts[tabId].isRunning = true;
-            spiderInsts[tabId].dept = dept;
-            spiderInsts[tabId].dest = dest;
-            spiderInsts[tabId].deptDateFrom = deptDateFrom;
-            spiderInsts[tabId].deptDateTo = deptDateTo;
-            spiderInsts[tabId].returnAfterDays = returnAfterDays;
-            resolve(true);
-        });
+    let tabId = await openUrlCurrentTabAsync(roundUrl);
+    console.log(tabId);
+    return new Promise((resolve) => {
+        if (!tabId) {
+            resolve(false);
+            return;
+        }
+        console.log(`${tabId} round spider start, ${dept} -> ${dest} deptDate:${deptDateFrom}=>${deptDateTo} returnAfter:${returnAfterDays}`);
+        spiderInsts[tabId] = {}
+        spiderInsts[tabId].spiderType = '往返';
+        spiderInsts[tabId].isRunning = true;
+        spiderInsts[tabId].dept = dept;
+        spiderInsts[tabId].dest = dest;
+        spiderInsts[tabId].deptDateFrom = deptDateFrom;
+        spiderInsts[tabId].deptDateTo = deptDateTo;
+        spiderInsts[tabId].returnAfterDays = returnAfterDays;
+        resolve(true);
     });
-    // let url = `http://www.baidu.com`;
-    
 }
 
 function stopSpider() {
@@ -160,7 +156,7 @@ async function queryNextTick() {
             continue;
         }
         
-        let tabExist = await checkTabExist(parseInt(tabId));
+        let tabExist = await checkTabExistAsync(parseInt(tabId));
         if (!tabExist) {
             console.log(`tabId:${tabId} not found, destoying spider inst`);
             spider.isRunning = false;

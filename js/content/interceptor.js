@@ -60,20 +60,4 @@ function postResponse(resp) {
         deptDate: depDate
     };
     sendMessageToBackground("postResponse", data);
-    // return;
-    // let dept = $('span[class="depart"]').text();
-    // let dest = $('span[class="arrive"]').text();
-
-    // $.ajax({
-    //     type: 'post',
-    //     url: `${API_BASE}/spider/handle`,
-    //     contentType: 'application/json;charset=utf-8',
-    //     data: JSON.stringify({
-    //         airInfos: JSON.parse(resp),
-    //         dept: dept,
-    //         dest: dest
-    //     }),
-    //     success: _ => {
-    //     },
-    // });
 }
