@@ -15,6 +15,7 @@ chrome.runtime.onInstalled.addListener(function () {
 let loginUser = undefined;
 var spiderInsts = {};
 var surpportCityCodeMap = undefined;
+var latestSpider = {};
 
 chrome.storage.local.remove('loginUser', _ => {
 });
@@ -76,6 +77,7 @@ async function startSingleSpider(dept, dest, deptDateFrom, deptDateTo) {
         spiderInsts[tabId].dest = dest;
         spiderInsts[tabId].deptDateFrom = deptDateFrom;
         spiderInsts[tabId].deptDateTo = deptDateTo;
+        latestSpider = spiderInsts[tabId];
         resolve(true);
     });
 }
@@ -103,6 +105,7 @@ async function startRoundSpider(dept, dest, deptDateFrom, deptDateTo, returnAfte
         spiderInsts[tabId].deptDateFrom = deptDateFrom;
         spiderInsts[tabId].deptDateTo = deptDateTo;
         spiderInsts[tabId].returnAfterDays = returnAfterDays;
+        latestSpider = spiderInsts[tabId];
         resolve(true);
     });
 }
@@ -155,8 +158,10 @@ async function queryNextTick() {
         if (!spider || !spider.isRunning){
             continue;
         }
-        
-        let tabExist = await checkTabExistAsync(parseInt(tabId));
+        let tabExist;
+        try {
+            tabExist = await checkTabExistAsync(parseInt(tabId));
+        } catch (err) { console.log(err); }
         if (!tabExist) {
             console.log(`tabId:${tabId} not found, destoying spider inst`);
             spider.isRunning = false;
@@ -229,11 +234,11 @@ function checkParamsValid(dept, dest, deptDateFrom, deptDateTo, spiderType, retu
 
 function postResponse(tabId, data) {
     let spider = spiderInsts[tabId];
-    console.log(`post data from tab: ${tabId}, ${spider.dept}->${spider.dest}, data:`, data);
     if (!spider) {
         console.log(`tabid ${tabId} spider instance not found`);
         return;
     }
+    console.log(`post data from tab: ${tabId}, ${spider.dept}->${spider.dest}, data:`, data);
     data.dept = spider.dept;
     data.dest = spider.dest;
     data.deptFrom = spider.deptDateFrom;

@@ -25,8 +25,8 @@ async function updateState(isRunning) {
         $('#startSpider').addClass('layui-btn-danger');
         let tabId = await getCurrentTabIdAsync();
         if (!_.isNil(bg.spiderInsts[tabId])) {
-            $('#nextTickTime').show();
-            $('#nextTickTime').text(moment(bg.spiderInsts[tabId].nextTick).format('YYYY/MM/DD HH:mm:ss'));
+            // $('#nextTickTime').show();
+            // $('#nextTickTime').text(moment(bg.spiderInsts[tabId].nextTick).format('YYYY/MM/DD HH:mm:ss'));
             $('#dept').val(bg.spiderInsts[tabId].dept);
             $('#dest').val(bg.spiderInsts[tabId].dest);
             $('#deptDateFrom').val(bg.spiderInsts[tabId].deptDateFrom);
@@ -43,7 +43,15 @@ async function updateState(isRunning) {
         $('#returnAfterDays').attr('disabled', false);
         $('#startSpider').text('开始获取');
         $('#startSpider').removeClass('layui-btn-danger');
-        $('#nextTickTime').hide();
+        // $('#nextTickTime').hide();
+        if (!_.isNil(bg.latestSpider)) { 
+            $('#dept').val(bg.latestSpider.dept);
+            $('#dest').val(bg.latestSpider.dest);
+            $('#deptDateFrom').val(bg.latestSpider.deptDateFrom);
+            $('#deptDateTo').val(bg.latestSpider.deptDateTo);
+            $(`input[name="spiderType"][value="${bg.latestSpider.spiderType}"]`).prop('checked', "true");
+            $('#returnAfterDays').val(bg.latestSpider.returnAfterDays);
+        }
     }
     form.render();
     // 
